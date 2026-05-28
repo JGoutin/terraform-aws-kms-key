@@ -16,6 +16,7 @@ Reuse user defined KMS key
 data "aws_kms_key" "main" {
   count  = local.kms_key_create ? 0 : 1
   key_id = var.id
+  region = var.region
 }
 
 /*
@@ -23,7 +24,7 @@ Create a new KMS key
 */
 
 locals {
-  name = "${var.name_prefix}-${data.aws_region.current.name}-kms-key"
+  name = "${var.name_prefix}-${data.aws_region.current.region}-kms-key"
 }
 
 resource "aws_kms_key" "main" {
@@ -31,12 +32,14 @@ resource "aws_kms_key" "main" {
   description         = "${local.name} encryption key"
   enable_key_rotation = true
   multi_region        = var.multi_region
+  region              = var.region
 }
 
 resource "aws_kms_alias" "main" {
   count         = local.kms_key_create_count
   name          = "alias/${local.name}"
   target_key_id = aws_kms_key.main[0].id
+  region        = var.region
 }
 
 # Policy
@@ -45,6 +48,7 @@ resource "aws_kms_key_policy" "main" {
   count  = local.kms_key_create_policy_count
   key_id = aws_kms_key.main[0].id
   policy = data.aws_iam_policy_document.main[0].json
+  region = var.region
 }
 
 data "aws_iam_policy_document" "main" {
@@ -77,4 +81,6 @@ Common data
 
 data "aws_caller_identity" "current" {}
 
-data "aws_region" "current" {}
+data "aws_region" "current" {
+  region = var.region
+}

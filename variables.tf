@@ -26,3 +26,9 @@ variable "multi_region" {
   type        = bool
   default     = null
 }
+
+variable "region" {
+  description = "AWS region where the KMS key is created. If null, falls back to the provider's configured region. Requires AWS provider >= 6.0.0."
+  type        = string
+  default     = null
+}

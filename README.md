@@ -347,7 +347,7 @@ Key outputs for integration:
 ## Requirements
 
 - **Terraform/OpenTofu**: >= 1.5.0
-- **AWS Provider**: >= 5.0
+- **AWS Provider**: >= 6.0.0
 - **Permissions**: `kms:CreateKey`, `kms:PutKeyPolicy`, `kms:CreateAlias`
 
 ## Best Practices
@@ -366,13 +366,16 @@ Key outputs for integration:
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
-No requirements.
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | n/a |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
 
 ## Modules
 
@@ -400,6 +403,7 @@ No modules.
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name to use as KMS key alias. | `string` | n/a | yes |
 | <a name="input_policy_dependency"></a> [policy\_dependency](#input\_policy\_dependency) | Used to ensure resource creation dependency. List of 'aws\_kms\_key\_policy' resource for the KMS key specified using var.id, used to be configured with 'policy\_documents\_json' output value from this module. | `list(any)` | `[]` | no |
 | <a name="input_policy_documents_json"></a> [policy\_documents\_json](#input\_policy\_documents\_json) | Policy JSON documents to merge together and set as the key policy. | `list(string)` | `[]` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region where the KMS key is created. If null, falls back to the provider's configured region. Requires AWS provider >= 6.0.0. | `string` | `null` | no |
 
 ## Outputs
 
