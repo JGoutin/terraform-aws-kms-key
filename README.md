@@ -45,7 +45,7 @@ This module simplifies AWS KMS key creation and policy management, with a unique
 module "kms_key" {
   source = "JGoutin/kms-key/aws"
   
-  name = "my-encryption-key"
+  name_prefix = "my-encryption-key"
 }
 ```
 
@@ -57,7 +57,7 @@ Creates a KMS key with default policy (root account access only).
 module "kms_key" {
   source = "JGoutin/kms-key/aws"
   
-  name = "app-encryption-key"
+  name_prefix = "app-encryption-key"
   
   policy_documents_json = [
     data.aws_iam_policy_document.s3_encryption.json,
@@ -115,23 +115,12 @@ data "aws_iam_policy_document" "cloudwatch_logs" {
 module "primary_kms_key" {
   source = "JGoutin/kms-key/aws"
   
-  name              = "multi-region-key"
-  multi_region      = true
-  deletion_window   = 30
-}
-
-# Replica in another region
-module "replica_kms_key" {
-  source = "JGoutin/kms-key/aws"
-  
-  providers = {
-    aws = aws.us_west_2
-  }
-  
-  name                    = "multi-region-key-replica"
-  multi_region_replica_of = module.primary_kms_key.arn
+  name_prefix  = "multi-region-key"
+  multi_region = true
 }
 ```
+
+This module only creates the primary multi-Region key. To replicate it into another Region, declare an `aws_kms_replica_key` resource directly (outside this module), referencing `module.primary_kms_key.arn` as `primary_key_arn`.
 
 ## Architecture
 
@@ -159,8 +148,8 @@ module "replica_kms_key" {
 │  │  └────────────────────────────────┘  │  │
 │  └──────────────────────────────────────┘  │
 │                                            │
-│  Automatic Rotation: Enabled               │
-│  Deletion Window: 30 days (default)        │
+│  Automatic Rotation: Enabled (fixed)       │
+│  Deletion Window: 30 days (fixed)          │
 └────────────────────────────────────────────┘
                     │
          ┌──────────┼──────────┐
@@ -201,8 +190,8 @@ policy_documents_json = [
 
 ```hcl
 module "kms_key" {
-  source = "JGoutin/kms-key/aws"
-  name   = "cloudwatch-encryption"
+  source      = "JGoutin/kms-key/aws"
+  name_prefix = "cloudwatch-encryption"
   
   policy_documents_json = [
     data.aws_iam_policy_document.cloudwatch_logs.json
@@ -232,8 +221,8 @@ resource "aws_cloudwatch_log_group" "encrypted" {
 
 ```hcl
 module "kms_key" {
-  source = "JGoutin/kms-key/aws"
-  name   = "s3-encryption"
+  source      = "JGoutin/kms-key/aws"
+  name_prefix = "s3-encryption"
   
   policy_documents_json = [
     data.aws_iam_policy_document.s3.json
@@ -256,8 +245,8 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "encrypted" {
 
 ```hcl
 module "kms_key" {
-  source = "JGoutin/kms-key/aws"
-  name   = "ecs-encryption"
+  source      = "JGoutin/kms-key/aws"
+  name_prefix = "ecs-encryption"
   
   policy_documents_json = [
     data.aws_iam_policy_document.ecs_task.json
@@ -283,8 +272,8 @@ Use `policy_dependency` output to control resource creation order:
 
 ```hcl
 module "kms_key" {
-  source = "JGoutin/kms-key/aws"
-  name   = "app-key"
+  source      = "JGoutin/kms-key/aws"
+  name_prefix = "app-key"
   
   policy_documents_json = [
     data.aws_iam_policy_document.app.json
@@ -302,65 +291,35 @@ resource "aws_s3_bucket" "encrypted" {
 
 ## Key Rotation
 
-Automatic key rotation is enabled by default:
+Automatic annual key rotation (`enable_key_rotation = true`) is hardcoded for every key this module creates — there is no variable to disable it. This is intentional (Security Hub KMS.4); reuse an existing key via `id` if you need different rotation behavior.
 
 - **Rotation Period**: 365 days (1 year)
 - **Old Keys**: Retained for decryption
 - **No Downtime**: Seamless rotation
 - **AWS Managed**: Automatic process
 
-Disable for compliance:
-
-```hcl
-module "kms_key" {
-  source          = "JGoutin/kms-key/aws"
-  name            = "no-rotation-key"
-  enable_rotation = false
-}
-```
-
 ## Deletion Protection
 
-Default deletion window: 30 days
-
-```hcl
-module "kms_key" {
-  source          = "JGoutin/kms-key/aws"
-  name            = "protected-key"
-  deletion_window = 30  # 7-30 days
-}
-```
+The deletion window is not exposed as a variable, so AWS applies its maximum: 30 days.
 
 **Terraform destroy** behavior:
 - Schedules key for deletion
 - Key enters "PendingDeletion" state
-- Can be canceled during window
-- Automatic deletion after window expires
+- Can be canceled during the 30-day window
+- Automatic deletion after the window expires
 
-## Outputs
-
-Key outputs for integration:
-
-- `id` - KMS key ID (for API calls)
-- `arn` - KMS key ARN (for resource configuration)
-- `alias_arn` - Key alias ARN (for IAM policies)
-- `policy_documents_json` - Merged policy JSON (for external use)
-- `policy_dependency` - Dependency anchor (for resource ordering)
+There is no `prevent_destroy` safeguard — treat `terraform destroy` / state removal on this resource with care (see [Security Hub Controls](#security-hub-controls), KMS.3).
 
 ## Requirements
 
-- **Terraform/OpenTofu**: >= 1.5.0
-- **AWS Provider**: >= 6.27.0
 - **Permissions**: `kms:CreateKey`, `kms:PutKeyPolicy`, `kms:CreateAlias`
 
 ## Best Practices
 
-1. **Enable Rotation** - Keep automatic key rotation enabled for enhanced security
-2. **Use Policy Merging** - Leverage the policy merging feature for complex multi-service scenarios
-3. **Set Deletion Window** - Use 30-day deletion window for production keys
-4. **Tag Resources** - Apply consistent tags for cost allocation and governance
-5. **Monitor Usage** - Track key usage and API calls via CloudWatch
-6. **Use Aliases** - Create meaningful aliases for easier key identification
+1. **Use Policy Merging** - Leverage the policy merging feature for complex multi-service scenarios
+2. **Tag Resources** - Apply consistent tags for cost allocation and governance
+3. **Monitor Usage** - Track key usage and API calls via CloudWatch
+4. **Use Aliases** - Create meaningful aliases for easier key identification (handled automatically for keys this module creates)
 
 ## Security Hub Controls
 
