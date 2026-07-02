@@ -347,7 +347,7 @@ Key outputs for integration:
 ## Requirements
 
 - **Terraform/OpenTofu**: >= 1.5.0
-- **AWS Provider**: >= 6.0.0
+- **AWS Provider**: >= 6.27.0
 - **Permissions**: `kms:CreateKey`, `kms:PutKeyPolicy`, `kms:CreateAlias`
 
 ## Best Practices
@@ -367,15 +367,15 @@ Key outputs for integration:
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.27.0 |
 
 ## Providers
 
 | Name | Version |
-|------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.0.0 |
+| ---- | ------- |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | >= 6.27.0 |
 
 ## Modules
 
@@ -384,7 +384,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [aws_kms_alias.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_alias) | resource |
 | [aws_kms_key.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key) | resource |
 | [aws_kms_key_policy.main](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kms_key_policy) | resource |
@@ -397,18 +397,19 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_id"></a> [id](#input\_id) | If specified, directly use this KMS key instead of creating a dedicated one for the application. | `string` | `null` | no |
 | <a name="input_multi_region"></a> [multi\_region](#input\_multi\_region) | Indicates whether the KMS key is a multi-Region (true) or regional (false) key. | `bool` | `null` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name to use as KMS key alias. | `string` | n/a | yes |
 | <a name="input_policy_dependency"></a> [policy\_dependency](#input\_policy\_dependency) | Used to ensure resource creation dependency. List of 'aws\_kms\_key\_policy' resource for the KMS key specified using var.id, used to be configured with 'policy\_documents\_json' output value from this module. | `list(any)` | `[]` | no |
 | <a name="input_policy_documents_json"></a> [policy\_documents\_json](#input\_policy\_documents\_json) | Policy JSON documents to merge together and set as the key policy. | `list(string)` | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region where the KMS key is created. If null, falls back to the provider's configured region. Requires AWS provider >= 6.0.0. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to created resources. | `map(string)` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_arn"></a> [arn](#output\_arn) | KMS key ARN. |
 | <a name="output_id"></a> [id](#output\_id) | KMS key ID. |
 | <a name="output_policy_dependency"></a> [policy\_dependency](#output\_policy\_dependency) | To use with 'depends\_on' for resources requiring that KMS policy from this module is updated before creation. |

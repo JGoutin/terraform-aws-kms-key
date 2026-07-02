@@ -33,6 +33,7 @@ resource "aws_kms_key" "main" {
   enable_key_rotation = true
   multi_region        = var.multi_region
   region              = var.region
+  tags                = var.tags
 }
 
 resource "aws_kms_alias" "main" {

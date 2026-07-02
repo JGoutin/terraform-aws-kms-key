@@ -32,3 +32,9 @@ variable "region" {
   type        = string
   default     = null
 }
+
+variable "tags" {
+  description = "Additional tags to apply to created resources."
+  type        = map(string)
+  default     = null
+}
