@@ -1,5 +1,8 @@
 # AWS KMS Key Management Module
 
+[![Terraform Module](https://img.shields.io/badge/Terraform-KMS%20Key%20module-844FBA?logo=terraform&logoColor=ffffff)](https://registry.terraform.io/modules/jgoutin/kms-key/aws/latest)
+[![OpenTofu Module](https://img.shields.io/badge/OpenTofu-KMS%20Key%20module-FFDA18?logo=opentofu&logoColor=ffffff)](https://search.opentofu.org/module/jgoutin/kms-key/aws/latest)
+
 Reusable Terraform module for creating and managing AWS KMS Customer Managed Keys with advanced policy merging capabilities.
 
 ## Overview
