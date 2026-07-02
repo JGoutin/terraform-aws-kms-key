@@ -362,6 +362,20 @@ Key outputs for integration:
 5. **Monitor Usage** - Track key usage and API calls via CloudWatch
 6. **Use Aliases** - Create meaningful aliases for easier key identification
 
+## Security Hub Controls
+
+AWS Security Hub (FSBP) controls relevant to the resources this module manages:
+
+Severity: 🔴 Critical · 🟠 High · 🟡 Medium · 🔵 Low
+
+| Control | Severity | Title | Status | Options to pass |
+|---|---|---|---|---|
+| KMS.1 | 🟡 Medium | IAM customer managed policies should not allow decryption actions on all KMS keys | ⬜ N/A | Module creates no `aws_iam_policy` resources. |
+| KMS.2 | 🟡 Medium | IAM principals should not have inline policies that allow decryption actions on all KMS keys | ⬜ N/A | Module creates no IAM identities or inline policies. |
+| KMS.3 | 🔴 Critical | AWS KMS keys should not be deleted unintentionally | ✅ Pass (default) | No `deletion_window_in_days` is exposed/overridden, so AWS applies its maximum 30-day window. No `prevent_destroy` safeguard exists — treat `terraform destroy` / state removal on this resource with care. |
+| KMS.4 | 🟡 Medium | AWS KMS key rotation should be enabled | ✅ Pass | `enable_key_rotation = true` is hardcoded for keys this module creates; there is no variable to disable it. N/A when reusing an existing key via `var.id` — rotation is then the caller's responsibility. |
+| KMS.5 | 🔴 Critical | KMS keys should not be publicly accessible | ⚠️ Conditional (default: ✅ Pass) | The built-in default policy (used when `policy_documents_json = []`) only grants the account root access, which passes. Passing depends entirely on what you pass in `policy_documents_json`: never include a statement with `Principal "*"` / `AWS: "*"` without a restrictive `Condition`, since documents are merged into the key policy without validation and a wildcard principal fails the control. |
+
 ---
 
 # Terraform Documentation
@@ -401,11 +415,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_id"></a> [id](#input\_id) | If specified, directly use this KMS key instead of creating a dedicated one for the application. | `string` | `null` | no |
+| <a name="input_id"></a> [id](#input\_id) | If specified, directly use this KMS key instead of creating a dedicated one for the application. Security Hub: when set, KMS.3/KMS.4/KMS.5 for this key become the responsibility of whatever created it — this module no longer manages its rotation or policy. | `string` | `null` | no |
 | <a name="input_multi_region"></a> [multi\_region](#input\_multi\_region) | Indicates whether the KMS key is a multi-Region (true) or regional (false) key. | `bool` | `null` | no |
 | <a name="input_name_prefix"></a> [name\_prefix](#input\_name\_prefix) | Name to use as KMS key alias. | `string` | n/a | yes |
 | <a name="input_policy_dependency"></a> [policy\_dependency](#input\_policy\_dependency) | Used to ensure resource creation dependency. List of 'aws\_kms\_key\_policy' resource for the KMS key specified using var.id, used to be configured with 'policy\_documents\_json' output value from this module. | `list(any)` | `[]` | no |
-| <a name="input_policy_documents_json"></a> [policy\_documents\_json](#input\_policy\_documents\_json) | Policy JSON documents to merge together and set as the key policy. | `list(string)` | `[]` | no |
+| <a name="input_policy_documents_json"></a> [policy\_documents\_json](#input\_policy\_documents\_json) | Policy JSON documents to merge together and set as the key policy. Security Hub: KMS.5 (KMS keys should not be publicly accessible) — default [] = pass (root-account-only policy); a statement with Principal "*" / AWS: "*" without a restrictive Condition fails this control, since documents are merged into the key policy without validation. | `list(string)` | `[]` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region where the KMS key is created. If null, falls back to the provider's configured region. Requires AWS provider >= 6.0.0. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to created resources. | `map(string)` | `null` | no |
 
